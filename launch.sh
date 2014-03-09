@@ -84,8 +84,8 @@ export PLUGIN_OUT_VCWARN="acp.warn"
 # These are only used to define HTML layouts (handled below)
 LIFEGRIDDIR="${DIRNAME}/lifegrid"
 BC_SUM_ROWS=8
-BC_COV_PAGE_WIDTH=1040
-COV_PAGE_WIDTH=1040
+BC_COV_PAGE_WIDTH=1200
+COV_PAGE_WIDTH=1200
 BC_COL_TITLE[0]="Sample Name"
 BC_COL_TITLE[1]="Mapped Reads"
 BC_COL_TITLE[2]="Number of Amplicons"
