@@ -22,6 +22,6 @@ if [ -f "${OUTDIR}/$pluginLowAmpTable" ]; then
 	echo -e "Download median coverage data for amplicons below minimum coverage threshold as a table file.\t${pluginLowAmpTable}" >> "$OUTFILE"
 fi
 if [ -f "${OUTDIR}/$pluginAmpPlots" ]; then
-	echo -e "Download scatter plot of all amplicons median coverage vs length of amplicon as a pdf file.\t${pluginAmpPlots}" >> "$OUTFILE"
+	echo -e "Download scatter plot of all amplicons median coverage vs length of amplicon as a pdf file.\t$PLUGIN_SCATTER_PLOT" >> "$OUTFILE"
 fi
 }
