@@ -64,9 +64,11 @@ barcode_partial_table ()
     if [ $NLINES -eq $NBARCODES ]; then
 	    REFRESHRATE=0
     fi
+
+    # TODO: intermediate report page breaks on refresh after all samples done processing
     write_html_header "$HTML" $REFRESHRATE
-    #barcode_links "$HTML" $NLINES 0
-    barcode_links "$HTML" $NLINES 1
+    barcode_links "$HTML" $NLINES 0
+    #barcode_links "$HTML" $NLINES 1
     write_html_footer "$HTML"
 
     # Write table to block output.
@@ -96,7 +98,7 @@ barcode_links ()
         echo "    <base target=\"_parent\"/>" >> $HTML
         echo "    <link rel=\"stylesheet\" media=\"all\" href=\"/site_media/resources/bootstrap/css/bootstrap.min.css\">" >> $HTML
         echo "    <style type=\"text/css\">" >> "$HTML"
-        echo "      table {font-family: "Lucida Sans Unicode", \"Lucida Grande\", Sans-Serif; font-size: 12px; cellspacing: 0; cellpadding: 0}" >> "$HTML"
+        echo "      table {font-family: \"Lucida Sans Unicode\", \"Lucida Grande\", Sans-Serif; font-size: 12px; cellspacing: 0; cellpadding: 0}" >> "$HTML"
         echo "      td{border: 0px solid #BBB;overflow: visible;color: black}" >> "$HTML"
         echo "      th{border: 1px solid #BBB;overflow: visible;background-color: #E4E5E4;}" >> "$HTML"
         echo "      p, ul{font-family: \"Lucida Sans Unicode\", \"Lucida Grande\", Sans-Serif;}" >> "$HTML"
@@ -117,13 +119,23 @@ barcode_links ()
 
     echo "     <table class=\"noheading\" style=\"table-layout:fixed\">" >> "$HTML"
     echo "      <tr>" >> "$HTML"
-    echo "      <th style=\"width:150px !important\"><span class=\"help\" title=\"The barcode ID for each set of reads.\">Amplicon Coverage Analysis Reports</span></th>" >> "$HTML"
+    echo "      <th style=\"width:150px !important\">" >> $HTML
+    echo "        <span class=\"help\" title=\"The barcode ID for each set of reads.\">" >> $HTML
+    echo "          Amplicon Coverage Analysis Reports" >> $HTML
+    echo "        </span></th>" >> "$HTML"
 
-    echo "       <th style=\"width:150px !important\"><span class=\"help\" title=\"${BC_COL_HELP[0]}\">${BC_COL_TITLE[0]}</span></th>" >> "$HTML"
+    echo "       <th style=\"width:150px !important\">" >> $HTML
+    echo "         <span class=\"help\" title=\"${BC_COL_HELP[0]}\">" >> $HTML
+    echo "           ${BC_COL_TITLE[0]}" >> $HTML
+    echo "         </span></th>" >> "$HTML"
+
     local BCN
     for((BCN=1;BCN<${BC_SUM_ROWS};BCN++))
     do
-        echo "       <th style=\"width:86px !important\"><span class=\"help\" title=\"${BC_COL_HELP[$BCN]}\">${BC_COL_TITLE[$BCN]}</span></th>" >> "$HTML"
+        echo "       <th style=\"width:86px !important\">" >> $HTML
+        echo "         <span class=\"help\" title=\"${BC_COL_HELP[$BCN]}\">" >> $HTML
+        echo "           ${BC_COL_TITLE[$BCN]}" >> $HTML
+        echo "         </span></th>" >> "$HTML"
     done
     echo "      </tr>" >> "$HTML"
 
@@ -135,11 +147,12 @@ barcode_links ()
             UNFIN=1
             break
         fi
-        if [ $IS_BLOCK -eq 1 ]; then
+        # Removed this check so that the null barcodes not printed in the report page either.
+        #if [ $IS_BLOCK -eq 1 ]; then
           if [ ${BARCODES_OK[$BCN]} -ne 1 ]; then
             continue
           fi
-        fi
+        #fi
         BARCODE=${BARCODES[$BCN]}
         echo "      <tr>" >> "$HTML"
         if [ ${BARCODES_OK[$BCN]} -eq 1 ]; then
@@ -152,15 +165,12 @@ barcode_links ()
                 echo "             </span></td>" >> "$HTML"
                 echo "          </a>" >> $HTML
             else
-               echo "       <td style=\"text-align:left\"><a style=\"cursor:help\" href=\"${BARCODE}/${HTML_RESULTS}\"><span title=\"Click to view the detailed coverage report for barcode ${BARCODE}\">${BARCODE}</span></a></td>" >> "$HTML"
+               echo "       <td style=\"text-align:left\">" >> $HTML
+               echo "         <a style=\"cursor:help\" href=\"${BARCODE}/${HTML_RESULTS}\">" >> $HTML
+               echo "           <span title=\"Click to view the detailed coverage report for barcode ${BARCODE}\">" >> $HTML
+               echo "             ${BARCODE}" >> $HTML
+               echo "           </span></a></td>" >> "$HTML"
             fi   
-            #TODO: see if I can remove this too.  Not going to display null data in the report
-        elif [ ${BARCODES_OK[$BCN]} -eq 2 ]; then
-            echo "       <td style=\"text-align:left\"><span class=\"help\" title=\"Barcode ${BARCODE} was not processed. Check Log File.\" style=\"color:red\">${BARCODE}</span></td>" >> "$HTML"
-        elif [ ${BARCODES_OK[$BCN]} -eq 3 ]; then
-            echo "       <td style=\"text-align:left\"><span class=\"help\" title=\"Barcode ${BARCODE} was not processed. Number of mapped reads was too few for Coverage Analysis.\" style=\"color:grey\">${BARCODE}</span></td>" >> "$HTML"
-        else
-            echo "       <td style=\"text-align:left\"><span class=\"help\" title=\"No Data for barcode ${BARCODE}\" style=\"color:grey\">${BARCODE}</span></td>" >> "$HTML"
         fi
         echo "           ${BARCODE_ROWSUM[$BCN]}" >> "$HTML"
         echo "      </tr>" >> "$HTML"
@@ -169,9 +179,9 @@ barcode_links ()
     echo "     </table></div>" >> "$HTML"
     if [ $UNFIN -eq 1 ]; then
           if [ $IS_BLOCK -eq 1 ]; then
-	echo "<p>Analysis in progress...</p>" >> "$HTML"
+              echo "<p>Analysis in progress...</p>" >> "$HTML"
           else
-	display_static_progress "$HTML"          
+              display_static_progress "$HTML"          
           fi	
     fi
     echo "   </div>" >> "$HTML"
@@ -305,11 +315,10 @@ barcode ()
     fi
 
 	# Cleanup
-    # TODO set cleanup
-	#if [[ "$PLUGIN_DEV_KEEP_INTERMIDIATE_FILES" -eq 0 ]]; then
-		#printf "\nFinalizing and cleaning up intermediate files...\n"
-		#run "rm \"${RESULTS_DIR}/Rplots.pdf\""
-		#run "rm \"${RESULTS_DIR}/barcodeList.txt\""
-		#printf "...done!\n"
-	#fi
+    if [[ "$PLUGIN_DEV_KEEP_INTERMIDIATE_FILES" -eq 0 ]]; then
+        printf "\nFinalizing and cleaning up intermediate files...\n"
+        run "rm \"${RESULTS_DIR}/Rplots.pdf\""
+        run "rm \"${RESULTS_DIR}/barcodeList.txt\""
+        printf "...done!\n"
+    fi
 }
