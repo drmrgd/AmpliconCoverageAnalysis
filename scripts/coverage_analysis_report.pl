@@ -4,6 +4,7 @@
 
 use File::Basename;
 use Data::Dump;
+use Getopt::Long qw{ :config bundling };
 
 # get current running script dir
 use FindBin qw($Bin);
@@ -29,29 +30,34 @@ my $statsfile2 = ""; # Not currently used for this plugin
 my $rowsumfile = "";
 my $helpfile ="";
 my $title="";
+my @subtitle;
 my $isblock=0;
 my $debug="";
 
-my $help = (scalar(@ARGV) == 0);
-while( scalar(@ARGV) > 0 )
-{
-    last if($ARGV[0] !~ /^-/);
-    my $opt = shift;
-    if($opt eq '-R') {$readsfile = shift;}
-    elsif($opt eq '-S') {$statsfile2 = shift;}
-    elsif($opt eq '-A') {$helpfile = shift;}
-    elsif($opt eq '-T') {$rowsumfile = shift;}
-    elsif($opt eq '-t') {$title = shift;}
-    elsif($opt eq '-b') {$isblock = shift;}
-    elsif($opt eq '-h' || $opt eq "?" || $opt eq '--help') {$help = 1;}
-	elsif($opt eq '-d') {$debug = shift;}
-    else
-    {
-        print STDERR "$CMD: Invalid option argument: $opt\n";
-        print STDERR "$OPTIONS\n";
-        exit 1;
-    }
+GetOptions(  "R=s"   => \$readsfile,
+             "S=s"   => \$statsfile2,
+             "A=s"   => \$helpfile,
+             "T=s"   => \$rowsumfile,
+             "t=s"   => \$title,
+             "b=i"   => \$isblock,
+             "help"  => \$help,
+             "d=i"   => \$debug,
+         ) 
+             or do { print $OPTIONS; exit 1 };
+$title =~ s/:/: /;
+
+if ( $debug == 1 ) {
+    print "==========  DEBUG  ==========\n";
+    print "\treadsfile (-R):  $readsfile\n";
+    print "\tstatsfile2 (-S): $statsfile2\n";
+    print "\thelpfile (-A):   $helpfile\n";
+    print "\trowsumfile (-T): $rowsumfile\n";
+    print "\ttitle (-t):      $title\n";
+    print "\tisblock (-b):    $isblock\n";
+    print "\tdebug (-d):      $debug\n";
+    print "============================\n";
 }
+
 if( $help )
 {
     print STDERR "$DESCR\n";
@@ -122,12 +128,12 @@ if( $readsfile ne "" )
         if( $isblock==0 )
         {
          print OUTFILE "<br/>\n";
-         print OUTFILE "<div class=\"statsdata center\" style=\"width:400px\">\n";
+         print OUTFILE "<div class=\"statsdata center\" style=\"width:420px\">\n";
         } 
         else
         {
          print OUTFILE "<table><tr valign=\"top\"><td>\n";
-		 print OUTFILE "<div class=\"statsdata center\" style=\"width:400px\"><table>\n";
+		 print OUTFILE "<div class=\"statsdata center\" style=\"width:420px\"><table>\n";
          print OUTFILE "<tr><th><span title=\"Alignment summary for trimmed reads mapped to the enriched or whole reference. \">Processed Alignments Summary</span></th></tr>\n";
          print OUTFILE "<tr><td><div class=\"statsdata\">\n";        
         }
