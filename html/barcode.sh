@@ -253,7 +253,8 @@ barcode ()
 			printf "Running coverage analysis on BAM file...\n"
             
             # TODO: add new scripts here.
-            run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $BARCODE_BAM\""
+            run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $BARCODE_BAM\"" || RT=0
+            run "eval \"Rscript $SCRIPTSDIR/coverage_scatter.R ${SAMPLEKEY[$BARCODE]} $MINCOVERAGE $BARCODE_DIR\"" || RT=0
 
             # Check return code for errors
 			if [[ $RT -ne 0 ]]; then
@@ -266,7 +267,7 @@ barcode ()
             else
 				# Generate coverage statistics for Barcoded BAM file for HTML Report output
                 # Variables for the HTML output and reports
-                local secondary_title="${BARCODE}_${PLUGIN_RUN_NAME}"
+                local secondary_title="${BARCODE}:${SAMPLEKEY[$BARCODE]}"
                 local barcode_rowsumfile="${BARCODE_DIR}/${HTML_ROWSUMS}"
                 local outhtml="${BARCODE_DIR}/$PLUGIN_OUT_COVERAGE_HTML"
                 local stats="${BARCODE_DIR}/$PLUGIN_OUT_COVERAGE_STATS"
