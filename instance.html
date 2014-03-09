@@ -1,0 +1,170 @@
+<html>
+<head>
+ <script type="text/javascript" src="/site_media/jquery/js/jquery-1.6.1.min.js"></script>
+
+ <style type="text/css">
+  #formwrap {
+   line-height: 2em;
+   background: #eef;
+   margin: 10px;
+   padding: 10px;
+   height: 500px;
+   text-align: center;
+  }
+  body {
+   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+   font-size: 14px;
+  }
+  .help {cursor:help; border-bottom: 1px dotted #A9A9A9}
+ </style>
+
+ <script>
+  $(function()
+  {
+    // turn off async JavaScript so we can easily get/set var names
+    $.ajaxSetup({async: false});
+    // get the reference for the current report - TS_result is defined in run verison of this script
+    var reportUrl = '/rundb/api/v1/results/' + TB_result + '/?format=json';
+    var referenceID;
+    var pluginOutDir;
+    $.get( reportUrl, function(data)
+    {
+     var rl = data.log;
+     var reportParams = rl.replace("log.html","ion_params_00.json");
+     pluginOutDir = data.filesystempath + '/plugin_out/';
+     $.getJSON( reportParams, function(data)
+     {
+      // from report data get the short reference name
+      referenceID = data.libraryName;
+     });
+    });
+    document.getElementById('referenceid').innerHTML = referenceID;
+
+     var refBedURL = '/rundb/api/v1/content/?format=json&limit=0&publisher__name=BED&path__startswith=/' + referenceID + '/unmerged/detail/';
+    $.get( refBedURL, function(data)
+    {
+      $.each( data.objects, function(intIndex,result)
+      {
+       var targfile = result.file;
+       //var i = targfile.lastIndexOf('/unmerged/detail/');
+	   var i = targfile.lastIndexOf('/');
+	   if( i < 0 ) return true;
+       //var selName = targfile.substr(i+17)
+       var selName = targfile.substr(i+1)
+	   if( selName.substr(0,7) == 'example' ) return true;
+       var j = selName.lastIndexOf('.bed');
+       if( j > 0 )
+       {
+        selName = selName.substr(0,j);
+        if( result.meta.hotspot )
+        {
+         $("#targetloci").append("<option value='" + targfile + "'>" +  selName + "</option>");
+        }
+        else
+        {
+         $("#targetregions").append("<option value='" + targfile + "'>" +  selName + "</option>");
+        }
+       }
+      });
+    });
+	
+    $.fn.serializeObject = function()
+    {
+     var o = {};
+     var a = this.serializeArray();
+     $.each(a, function()
+     {
+       if (o[this.name] != null) {
+        if (!o[this.name].push) {
+         o[this.name] = [o[this.name]];
+        }
+        o[this.name].push(this.value || '');
+       } else {
+        o[this.name] = this.value || '';
+       }
+      });
+      return o;
+    };
+
+    $( function()
+    {
+     $('#postbutton').click( function()
+     {
+		 
+	  // pass user selection with spaces translated to underscores
+      usrSel = document.getElementById('targetregions')[document.ampcovplots.targetregions.selectedIndex].text;
+      document.ampcovplots.targetregions_id.value = usrSel.replace(/\s/g,'_');
+      
+      // serialize user selections and run the plugin
+      obj = $('#ampcovplots').serializeObject();
+      pluginAPIJSON = { "plugin" : [TB_plugin.fields.name], "pluginconfig" : obj };
+      pluginAPIJSON = JSON.stringify(pluginAPIJSON);
+      pluginURL = "/rundb/api/v1/results/" + TB_result + "/plugin/";
+      $.ajax({ type: 'POST', url: pluginURL, async: false, contentType: "application/json; charset=utf-8", data: pluginAPIJSON, dataType: "json",
+       success: function(data)
+       {
+        $("#json_result").html(
+         '<div style="text-align: center;"><img src="/site_media/jquery/colorbox/images/loading.gif" alt="Running Plugin" style="float:center"></img><p>Running the Plugin... Check AmpCovPlots.html in the Plugin Summary</p></div>');
+        setTimeout("parent.$.fn.colorbox.close()",2000);
+       }
+      });
+     });
+    });
+
+  });
+ </script>
+</head>
+
+<body>
+ <div align="center">
+  <form id="ampcovplots" name="ampcovplots" style="margin-left:auto;margin-right:auto">
+   <h1>Amplicon Coverage Analysis Plugin</h1>
+   <table cellpadding="5px">
+    <tr>
+     <td><span class="help" title="The short name of the reference genome (or DNA sequences) that the current report was generated against.">Reference Genome:</span></td>
+     <td><div id="referenceid"></div></td>
+    </tr>
+    <tr>
+    <td><span class="help"
+       title="Select the target regions bed file matching your amplicon panel. See Description and Notes below.">
+       Targeted Regions:</span></td>
+     <td><select id="targetregions" name="targetregions" style="width:300px"><option value="">None</option></select></td>
+	<tr>
+		<td><span class="help"
+				title="The minimum number of reads (coverage) to set as the threshold.  Amplicons below this will populate the LowCoverageAmplicons Table. The default is 450 reads">
+				Minimum Coverage:
+		</span></td>
+		<td><input type="text" id="mincoverage" name="mincoverage" value="450"></form></td>
+	</tr>
+	</table>
+	<br/>
+   <div id="json_result">
+    <input id="postbutton" type="submit" value="Submit">
+   </div>
+   <input type="hidden" id="targetregions_id" name="targetregions_id"/>
+   <input type="hidden" id="targetloci_id" name="targetloci_id"/>
+   <br/>
+   <div align="left">
+    <h3>Description and Usage Notes</h3>
+    <p>
+	This plugin will determine the coverage for each base of every amplicon in a targetted resequencing experiment.
+	Based on those data, the median coverage for each amplicon will be determined, and the results will be plotted
+	in one scatter plot representing amplicon length vs median coverage, as well as in individual amplicon plots.
+	The plugin will also show the location of hotspots and will plot out homopolymer regions and the ref genes 
+	coding regions as they relate to each amplicon. <b> Note: This plugin is designed to work with Human Reference
+	hg19 only! </b></p>
+	<p>
+	To use this plugin, please select the regions bed file that describes your amplicon panel (the same bed file
+	used in the Torrent Variant Caller) and the minimum coverage threshold (default 450).  This threshold will appear
+	as a line on the graph, and will tell the plugin which amplicons to populate the Low Coverage Amplicons
+	table that will be generated.</p>
+	<p>
+	For more details on how to use this plugin and the required additional packages that need to be installed,
+	please see the User Documentation.</p>
+
+   </div>
+  </form>
+  </div>
+</body>
+</html>
+
