@@ -12,7 +12,7 @@ use Data::Dump;
 use Cwd;
 
 ( my $scriptname = $0 ) =~ s/^(.*\/)+//;
-my $version = "v0.2.030414";
+my $version = "v0.3.030914";
 my $description = <<"EOT";
 <fill_in_program_description>
 EOT
@@ -20,6 +20,7 @@ EOT
 my $usage = <<"EOT";
 USAGE: $scriptname [options] <BED_file> <BAM_file>
     -s, --sample      Sample name
+    -i, --ion         Using an Ion Torrent BED file that has been processed.
     -r, --reads       Total number of reads in the BAM file.
     -t, --threshold   Minimum number of reads threshold (DEFAULT: 450).
     -o, --outdir      Send output to custom directory.  Default is CWD.
@@ -33,9 +34,11 @@ my $outdir = getcwd;
 my $sample_name;
 my $num_reads;
 my $threshold = 450;
+my $ion;
 
 GetOptions( "outdir=s"    => \$outdir,
             "sample=s"    => \$sample_name,
+            "ion"         => \$ion,
             "reads=i"     => \$num_reads,
             "threshold=i" => \$threshold,
             "version"     => \$ver_info,
@@ -76,11 +79,17 @@ open( my $summary_fh, ">", $summary_file ) || die "Can't open the 'stat_table.tx
 my $bedfile = shift;
 my $bamfile = shift;
 
+# If we're using an Ion Torrent processed BED file from their API, we need to process it a bit to get the Gene ID
+if ( $ion ) {
+    my $proc_bed = proc_bed( \$bedfile );
+    $bedfile = $proc_bed;
+}
+
 my %coverage_data;
 my @all_coverage;
 
 # Use BEDtools to get amplicon coverage data for each amplicon
-open( my $covbed, "-|", "bedtools coverage -d -abam $bamfile -b $bedfile" ) || die "Can't open the stream: $!";
+open( my $covbed, "-|", "coverageBed -d -abam $bamfile -b $bedfile" ) || die "Can't open the stream: $!";
 
 while (<$covbed>) {
     chomp;
@@ -158,4 +167,29 @@ sub quartile_coverage {
     my $third_quartile = median( \@upper_half );
 
     return( $first_quartile, $second_quartile, $third_quartile );    
+}
+
+sub proc_bed {
+    my $input_bed = shift;
+    (my $new_name = $$input_bed) =~ s/(.*?)\.bed/$1_clean.bed/;
+    my $output_bed = "$outdir/$new_name";
+
+    open( my $fh, "<", $$input_bed ) || die "Can't open the BED file for processing: $!";
+    open( my $out_fh, ">", $output_bed ) || die "Can't create the new BED file: $!";
+
+    while (<$fh>) {
+        if ( /track/ ) {
+            print $out_fh $_;
+            next;
+        }
+
+        my @fields = split;
+        my ($gene, $pool) = $fields[7] =~ /GENE_ID=(.*);SUBMITTED_REGION=(.*)$/;
+
+        print $out_fh join( "\t", @fields[0..3], $pool, $gene ), "\n";
+    }
+    close $fh;
+    close $out_fh;
+
+    return $output_bed;
 }
