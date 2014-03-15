@@ -123,7 +123,7 @@ write_html_results ()
     local HTMLOUT="${OUTDIR}/${HTML_RESULTS}";
 	write_page_header "$LIFEGRIDDIR/ACP.head.html" "$HTMLOUT"; # function in  /html/common.sh
     cat "${OUTDIR}/$PLUGIN_OUT_COVERAGE_HTML" >> "$HTMLOUT"
-	echo "<div><img class=\"scatterplot\" src=\"${PLUGIN_SCATTER_PLOT_PNG}\" width=\"600\" heigth=\"600\"></div><br/><br/>" >> "$HTMLOUT"
+	echo "<div><img class=\"scatterplot\" src=\"${PLUGIN_SCATTER_PLOT_PNG}\" width=\"600\" height=\"600\"></div><br/><br/>" >> "$HTMLOUT"
 	echo "<div id=\"LowAmpliconsCoverage\" fileurl=\"${pluginLowAmpTable}\" class=\"center\"></div><br/>" >> "$HTMLOUT"
 	echo "<div id=\"AllAmpliconsCoverage\" fileurl=\"${pluginAmpCovTable}\" class=\"center\"></div><br/>" >> "$HTMLOUT"
     
