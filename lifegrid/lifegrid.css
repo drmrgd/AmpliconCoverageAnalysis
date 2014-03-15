@@ -10,7 +10,7 @@
 
 .grid-mask {
   width:100%; 
-  height:100%;
+  height:100% !important;
   filter:alpha(opacity=50); 
   -moz-opacity:0.5; 
   -khtml-opacity: 0.5; 
