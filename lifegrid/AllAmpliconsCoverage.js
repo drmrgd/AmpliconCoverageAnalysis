@@ -14,8 +14,12 @@ document.write('\
 <div id="AA-filterpanel" class="filter-panel" style="display:none">\
 	<table style="width:100%"><tr><td>\
 		<span class="nwrap">Amplicon ID <input type="text" id="AA-txtSearchAmpID" class="txtSearch" size=7 value=""></span>\
-		<span class="nwrap">Gene Name <input type="text" id="AA-txtSearchGeneID" class="tstSerch" size=7 value=""></span>\
+		<span class="nwrap">Gene Name <input type="text" id="AA-txtSearchGeneID" class="txtSerch" size=7 value=""></span>\
 		<span class="nwrap">Median &le; <input type="text" id="AA-txtSearchCovMin" class="numSearch" size=7 value=""></span>\
+		<span class="nwrap">Forward Proportion Between <input type="text" id="AA-txtSearchFpropMin" class="numSearch" size=7 value="0.000"></span>\
+            and <input type="text" id="AA-txtSearchFpropMax" class="numSearch" size=7 value="1.000"></span>\
+		<span class="nwrap">Reverse Proportion Between <input type="text" id="AA-txtSearchRpropMin" class="numSearch" size=7 value="0.000"></span>\
+            and <input type="text" id="AA-txtSearchRpropMax" class="numSearch" size=7 value="1.000"></span>\
 		<span class="nwrap">Amplicon Length Between <input type="text" class="numSearch" id="AA-txtSearchLengthMin" size=4 value="0">\
 			and <input type="text" id="AA-txtSearchLengthMax" size=4 value="250"></span>\
 		</td><td style="float:right;padding-right:8px">\
@@ -78,6 +82,10 @@ function resetFilterSettings() {
  	   searchStringAmpID: "",
 	   searchStringGeneID: "",
 	   searchStringMedian: Number(0),
+       searchStringFpropStart: Number(0.000),
+       searchStringFpropEnd: Number(1.000),
+       searchStringRpropStart: Number(0.000),
+       searchStringRpropEnd: Number(1.000),
 	   searchStringLengthStart: Number(0),
 	   searchStringLengthEnd: Number(250)
 	}
@@ -88,6 +96,10 @@ function updateFilterSettings() {
 	$("#AA-txtSearchAmpID").attr('value',filterSettings['searchStringAmpID']);
 	$("#AA-txtSearchGeneID").attr('value',filterSettings['searchStringGeneID']);
 	$("#AA-txtSearchCovMin").attr('value',filterSettings['searchStringMedian'] ? "" : filterSettings['searchStringMedian']);
+    $("#AA-txtSearchFpropMin").attr('value',filterSettings['searchStringFpropStart'] ? "" : filterSettings['searchStringFpropStart']);
+    $("#AA-txtSearchFpropMax").attr('value',filterSettings['searchStringFpropEnd'] ? "" : filterSettings['searchStringFpropEnd']);
+    $("#AA-txtSearchRpropMin").attr('value',filterSettings['searchStringRpropStart'] ? "" : filterSettings['searchStringRpropStart']);
+    $("#AA-txtSearchRpropMax").attr('value',filterSettings['searchStringRpropEnd'] ? "" : filterSettings['searchStringRpropEnd']);
 	$("#AA-txtSearchLengthMin").attr('value',filterSettings['searchStringLengthStart'] ? "" : filterSettings['searchStringLengthStart']);
 	$("AA-txtSearchLengthMax").attr('value',filterSettings['searchStringLengthEnd'] ? "" : filterSettings['searchStringLengthEnd']);
 }
@@ -106,6 +118,8 @@ function myFilter(item,args) {
   if( strNoMatch( item["ampid"].toUpperCase(), args.searchStringAmpID ) ) return false;
   if( strNoMatch( item["geneid"].toUpperCase(), args.searchStringGeneID ) ) return false;
   if( rangeMore( item["median"], args.searchStringMedian ) ) return false;
+  if( rangeNoMatch( item["fprop"], args.searchStringFpropStart, args.searchStringFpropEnd ) ) return false;
+  if( rangeNoMatch( item["rprop"], args.searchStringRpropStart, args.searchStringRpropEnd ) ) return false;
   if( rangeNoMatch( item["length"], args.searchStringLengthStart, args.searchStringLengthEnd ) ) return false;
   return true;
 }
@@ -158,27 +172,12 @@ $('#AA-exportOK').click(function(e) {
   }
 });
 
-// Load up the index of PDFs from the JSON file
-var pdfIndex =  [];
-$.getJSON("pdf_index.json", function(data) {
-	pdfIndex = data;
-});
-
-// Link directly to PDF files to view them on the fly
-function CovPlotsView(row, cell, value, columnDef, dataContext) {
-	var amplicon = grid.getData().getItem(row)['ampid'];
-	var locpath = window.location.pathname.substring(0,window.location.pathname.lastIndexOf('/'));
-	var plotsFolder = window.location.protocol + "//" + window.location.host + locpath + "/CovPlots/";
-	var href = plotsFolder + pdfIndex[amplicon];
-	return "<a href='" + href + "'>" + value + "</a>";
-}
-
 // Column Headers
 var columns = [];
 var checkboxSelector = new Slick.CheckboxSelectColumn();
 columns.push(checkboxSelector.getColumnDefinition());
 columns.push({
-id: "ampid", name: "Amplicon ID", field: "ampid", width: 150, minWidth: 40, maxWidth: 150, sortable: true, formatter: CovPlotsView,
+id: "ampid", name: "Amplicon ID", field: "ampid", width: 120, minWidth: 40, maxWidth: 150, sortable: true,
   toolTip: "ID name of amplicon in the panel" });
 columns.push({
 id: "geneid", name: "Gene Name", field: "geneid", width: 100, minWidth: 50, maxWidth: 100, sortable: true,
@@ -187,10 +186,22 @@ columns.push({
 id: "median", name: "Median", field: "median", width: 100, minWidth: 38, maxWidth: 110, sortable: true,
   toolTip: "The median coverage across the amplicon." });
 columns.push({
-id: "length", name: "Length", field: "length", width: 100, minWidth: 54, maxWidth: 110, sortable: true,
+id: "forward", name: "Forward", field: "forward", width: 100, minWidth: 38, maxWidth: 110, sortable: true,
+  toolTip: "The number of forward strand reads." });
+columns.push({
+id: "reverse", name: "Reverse", field: "reverse", width: 100, minWidth: 38, maxWidth: 110, sortable: true,
+  toolTip: "The number of reverse strand reads." });
+columns.push({
+id: "fprop", name: "Forward Proportion", field: "fprop", width: 100, minWidth: 38, maxWidth: 110, sortable: true, 
+  toolTip: "The proportion of forward strand reads in the population." });
+columns.push({
+id: "rprop", name: "Reverse Proportion", field: "rprop", width: 100, minWidth: 38, maxWidth: 110, sortable: true,
+  toolTip: "The proportion of reverse strand reads in the population." });
+columns.push({
+id: "length", name: "Length", field: "length", width: 80, minWidth: 38, maxWidth: 110, sortable: true,
   toolTip: "The total length of the amplicon." });
 
-$("#AllAmpliconsCoverage").css('width','490px');
+$("#AllAmpliconsCoverage").css('width','828px');
 
 // define the grid and attach head/foot of the table
 var options = {
@@ -227,7 +238,6 @@ grid.onSort.subscribe(function(e,args) {
 		return 0;
 	});
 });
-
 
 // wire up model events to drive the grid
 dataView.onRowCountChanged.subscribe(function (e, args) {
@@ -277,14 +287,6 @@ $("#AA-txtSearchLengthMin").keyup(function(e) {
   updateFilter();
 });
 
-$("#AA-txtSearchLengthMax").keyup(function(e) {
-  Slick.GlobalEditorLock.cancelCurrentEdit();
-  if( e.which == 27 ) { this.value = ""; }
-  this.value = this.value.replace(/\D/g,"");
-  filterSettings['searchStringLengthEnd'] = Number( this.value == "" ? 0 : this.value );
-  updateFilter();
-});
-
 $("#AA-txtSearchCovMin").keyup(function(e) {
   Slick.GlobalEditorLock.cancelCurrentEdit();
   if( e.which == 27 ) { this.value = ""; }
@@ -293,6 +295,45 @@ $("#AA-txtSearchCovMin").keyup(function(e) {
   updateFilter();
 });
 
+$("#AA-txtSearchLengthMax").keyup(function(e) {
+  Slick.GlobalEditorLock.cancelCurrentEdit();
+  if( e.which == 27 ) { this.value = ""; }
+  this.value = this.value.replace(/\D/g,"");
+  filterSettings['searchStringLengthEnd'] = Number( this.value == "" ? 0 : this.value );
+  updateFilter();
+});
+
+$("#AA-txtSearchFpropMin").keyup(function(e) {
+  Slick.GlobalEditorLock.cancelCurrentEdit();
+  if( e.which == 27 ) { this.value = ""; }
+  //this.value = this.value.replace(/\D/g,"");
+  filterSettings['searchStringFpropStart'] = Number( this.value == "" ? 0 : this.value );
+  updateFilter();
+});
+
+$("#AA-txtSearchFpropMax").keyup(function(e) {
+  Slick.GlobalEditorLock.cancelCurrentEdit();
+  if( e.which == 27 ) { this.value = ""; }
+  //this.value = this.value.replace(/\D/g,"");
+  filterSettings['searchStringFpropEnd'] = Number( this.value == "" ? 0 : this.value );
+  updateFilter();
+});
+
+$("#AA-txtSearchRpropMin").keyup(function(e) {
+  Slick.GlobalEditorLock.cancelCurrentEdit();
+  if( e.which == 27 ) { this.value = ""; }
+  //this.value = this.value.replace(/\D/g,"");
+  filterSettings['searchStringRpropStart'] = Number( this.value == "" ? 0 : this.value );
+  updateFilter();
+});
+
+$("#AA-txtSearchRpropMax").keyup(function(e) {
+  Slick.GlobalEditorLock.cancelCurrentEdit();
+  if( e.which == 27 ) { this.value = ""; }
+  //this.value = this.value.replace(/\D/g,"");
+  filterSettings['searchStringRpropEnd'] = Number( this.value == "" ? 0 : this.value );
+  updateFilter();
+});
 function updateFilter() {
   dataView.setFilterArgs(filterSettings);
   dataView.refresh();
@@ -385,8 +426,12 @@ function loadtable() {
 			check : false,
 	  		ampid : ampid,
 			geneid : fields[1],
-	  		median : Number(fields[2]),
-	  		length : Number(fields[3])
+            forward : Number(fields[2]),
+            reverse : Number(fields[3]),
+            fprop : Number(fields[4]),
+            rprop : Number(fields[5]),
+	  		median : Number(fields[6]),
+	  		length : Number(fields[7])
 			};
         ++numRecords;
 		if( loadUpdate > 0 && numRecords % loadUpdate == 0 ) onLoadPartial();
