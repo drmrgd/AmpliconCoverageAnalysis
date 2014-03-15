@@ -3,7 +3,7 @@ document.write('\
 <div id="LA-tablecontent" style="display:none">\
   <div id="LA-titlebar" class="grid-header">\
     <span id="LA-collapseGrid" style="float:left" class="ui-icon ui-icon ui-icon-triangle-1-n" title="Collapse view"></span>\
-    <span class="table-title">Coverage Data for All Amplicons in the Panel</span>\
+    <span class="table-title">Amplicons Below Minimum Coverage</span>\
 	<span id="LA-toggleFilter" style="float:right" class="ui-icon ui-icon-search" title="Toggle search/filter panel"></span>\
 	<span id="LA-message" class="message"></span>\
   </div>\
@@ -204,11 +204,14 @@ id: "length", name: "Length", field: "length", width: 80, minWidth: 38, maxWidth
 $("#LowAmpliconsCoverage").css('width','828px');
 
 // define the grid and attach head/foot of the table
+// XXX
 var options = {
   editable: true,
   autoEdit: false,
+  //autoHeight: true, // Disable the scroll feature
   enableCellNavigation: true,
-  multiColumnSort: true
+  multiColumnSort: true,
+  enableTextSelectionOnCells: true,
 };
 var dataView = new Slick.Data.DataView({inlineFilters: true});
 var grid = new Slick.Grid("#LA-grid", dataView, columns, options);
@@ -306,7 +309,6 @@ $("#LA-txtSearchLengthMax").keyup(function(e) {
 $("#LA-txtSearchFpropMin").keyup(function(e) {
   Slick.GlobalEditorLock.cancelCurrentEdit();
   if( e.which == 27 ) { this.value = ""; }
-  //this.value = this.value.replace(/\D/g,"");
   filterSettings['searchStringFpropStart'] = Number( this.value == "" ? 0 : this.value );
   updateFilter();
 });
@@ -314,7 +316,6 @@ $("#LA-txtSearchFpropMin").keyup(function(e) {
 $("#LA-txtSearchFpropMax").keyup(function(e) {
   Slick.GlobalEditorLock.cancelCurrentEdit();
   if( e.which == 27 ) { this.value = ""; }
-  //this.value = this.value.replace(/\D/g,"");
   filterSettings['searchStringFpropEnd'] = Number( this.value == "" ? 0 : this.value );
   updateFilter();
 });
@@ -322,7 +323,6 @@ $("#LA-txtSearchFpropMax").keyup(function(e) {
 $("#LA-txtSearchRpropMin").keyup(function(e) {
   Slick.GlobalEditorLock.cancelCurrentEdit();
   if( e.which == 27 ) { this.value = ""; }
-  //this.value = this.value.replace(/\D/g,"");
   filterSettings['searchStringRpropStart'] = Number( this.value == "" ? 0 : this.value );
   updateFilter();
 });
@@ -330,7 +330,6 @@ $("#LA-txtSearchRpropMin").keyup(function(e) {
 $("#LA-txtSearchRpropMax").keyup(function(e) {
   Slick.GlobalEditorLock.cancelCurrentEdit();
   if( e.which == 27 ) { this.value = ""; }
-  //this.value = this.value.replace(/\D/g,"");
   filterSettings['searchStringRpropEnd'] = Number( this.value == "" ? 0 : this.value );
   updateFilter();
 });
@@ -368,16 +367,17 @@ var dataFile = $("#LowAmpliconsCoverage").attr("fileurl");
 
 function loadtable() {
   var errorTrace = -1;
-  var loadUpdate = 10000;
+  var loadUpdate = 10;
   var firstPartialLoad = true;
   var numRecords = 0;
-  var initialRowDisplay = 10;
+  var initialRowDisplay = 25;
 
   function onLoadPartial() {
     if( firstPartialLoad ) {
       firstPartialLoad = false;
       var numDataRows = (numRecords < initialRowDisplay) ? numRecords : initialRowDisplay;
-      $("#LA-grid").css('height',(numDataRows*25+27)+'px');
+      //$("#LA-grid").css('height',(numDataRows*25+27)+'px');
+      $("#LA-grid").css('height',(numDataRows*25+58)+'px');
     }
     dataView.setItems(data);
     grid.resizeCanvas();
@@ -434,7 +434,7 @@ function loadtable() {
 	  		length : Number(fields[7])
 			};
         ++numRecords;
-		if( loadUpdate > 0 && numRecords % loadUpdate == 0 ) onLoadPartial();
+		//if( loadUpdate > 0 && numRecords % loadUpdate == 0 ) onLoadPartial();
 		}
       });
   }).success(onLoadSuccess).error(onLoadError);
