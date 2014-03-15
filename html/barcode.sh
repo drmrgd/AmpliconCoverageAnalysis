@@ -264,7 +264,10 @@ barcode ()
             
             # TODO: add new scripts here.
             #       Should i run coverageBed separately and parse it out instead of wrapping it in a perl script?
-            run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -i -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $BARCODE_BAM\"" || RT=0
+            bambed="${BARCODE_DIR}/bam_reads.bed"
+            run "bamToBed -i $BARCODE_BAM > $bambed" || RT = 0
+            #run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -i -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $BARCODE_BAM\"" || RT=0
+            run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -i -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $bambed\"" || RT=0
             run "eval \"Rscript $SCRIPTSDIR/coverage_scatter.R ${SAMPLEKEY[$BARCODE]} $MINCOVERAGE $BARCODE_DIR\"" || RT=0
 
             # Check return code for errors
