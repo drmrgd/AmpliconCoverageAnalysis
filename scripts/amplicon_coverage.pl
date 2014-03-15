@@ -1,5 +1,6 @@
 #!/usr/bin/perl
-# Input a regions BED file and a BAM file and output tables indicating the median coverage for each amplicon,
+# Input a regions BED file and a BED file generated from the sequence BAM file processed through bamToBed,
+# and output tables indicating the median coverage for each amplicon, each strand covered by the amplicon,
 # the identities of amplicons that did not meet the minumum threshold, and a summary table for the sample.
 #
 # 3/4/2014 - D Sims
@@ -12,13 +13,14 @@ use Data::Dump;
 use Cwd;
 
 ( my $scriptname = $0 ) =~ s/^(.*\/)+//;
-my $version = "v0.3.030914";
+my $version = "v0.5.031414";
 my $description = <<"EOT";
-<fill_in_program_description>
+From an Regions BED file, and a BED file generated from the sequence BAM file processed through bamToBed,
+generate strand coverage information for an amplicon panel.
 EOT
 
 my $usage = <<"EOT";
-USAGE: $scriptname [options] <BED_file> <BAM_file>
+USAGE: $scriptname [options] <regions_bed> <BAM_bed>
     -s, --sample      Sample name
     -i, --ion         Using an Ion Torrent BED file that has been processed.
     -r, --reads       Total number of reads in the BAM file.
@@ -76,50 +78,91 @@ open( my $summary_fh, ">", $summary_file ) || die "Can't open the 'stat_table.tx
 
 #########------------------------------ END ARG Parsing ---------------------------------#########
 
-my $bedfile = shift;
-my $bamfile = shift;
+my $regionsbed = shift;
+my $bambed = shift;
 
 # If we're using an Ion Torrent processed BED file from their API, we need to process it a bit to get the Gene ID
 if ( $ion ) {
-    my $proc_bed = proc_bed( \$bedfile );
-    $bedfile = $proc_bed;
+    my $proc_bed = proc_bed( \$regionsbed);
+    $regionsbed= $proc_bed;
 }
 
 my %coverage_data;
-my @all_coverage;
 
 # Use BEDtools to get amplicon coverage data for each amplicon
-open( my $covbed, "-|", "coverageBed -d -abam $bamfile -b $bedfile" ) || die "Can't open the stream: $!";
+my $get_forward_reads = qq{ grep "\\+\$" $bambed | coverageBed -d -a stdin -b $regionsbed };
+my $get_reverse_reads = qq{ grep "\\-\$" $bambed | coverageBed -d -a stdin -b $regionsbed };
 
-while (<$covbed>) {
+open( my $fcov, "-|", "$get_forward_reads" ) || die "Can't open the stream: $!";
+open( my $rcov, "-|", "$get_reverse_reads" ) || die "Can't open the stream: $!";
+
+while (<$fcov>) {
     chomp;
     my @data = split;
-    push( @{$coverage_data{join( ":", @data[3,5] )}}, $data[-1] );
-    push( @all_coverage, $data[-1] );
+    push( @{$coverage_data{join( ":", @data[3,5] )}->{'for'}}, $data[7] );
 }
-close $covbed;
+close $fcov;
+
+while (<$rcov>) {
+    chomp;
+    my @data = split;
+    push( @{$coverage_data{join( ":", @data[3,5] )}->{'rev'}}, $data[7] );
+}
+close $rcov;
 
 #dd \%coverage_data;
+#exit;
 
-my %median_coverage;
+my %coverage_stats;
+my @all_coverage;
+
 for my $amplicon( sort keys %coverage_data ) {
-    $median_coverage{ join( ":", $amplicon, scalar(@{$coverage_data{$amplicon}} ) )} = median( \@{$coverage_data{$amplicon}} );
+    my $length = scalar(@{$coverage_data{$amplicon}->{'for'}});
+
+    my @forward_reads = @{$coverage_data{$amplicon}->{'for'}};
+    my @reverse_reads = @{$coverage_data{$amplicon}->{'rev'}};
+
+    my $forward_median = median( \@forward_reads ); 
+    my $reverse_median = median( \@reverse_reads );
+
+    my @amp_coverage;
+    for my $i ( 0..$#forward_reads ) {
+        my $sum_fr = $forward_reads[$i] + $reverse_reads[$i]; 
+        push( @all_coverage, $sum_fr );
+        push( @amp_coverage, $sum_fr );
+    }
+    my $median = median( \@amp_coverage );
+
+    my $total_reads = $forward_median + $reverse_median;
+
+    my ( $forward_prop, $reverse_prop );
+    if ( $total_reads != 0 ) {
+        $forward_prop = sprintf( "%.3f", $forward_median/$total_reads );
+        $reverse_prop = sprintf( "%.3f", 1 - $forward_prop );
+    } else {
+        $forward_prop = $reverse_prop = 0;
+    }
+
+    push( @{$coverage_stats{ join( ":", $amplicon, $length )}}, $forward_median, $reverse_median, $forward_prop, $reverse_prop, $median ); 
 }
 
-#dd \%median_coverage;
+#dd \%coverage_stats;
 #exit;
 
 # Make tables of All Amplicon and Low Amplicon Coverage
-print $aa_fh "Amplicon\tGene\tMedian\tLength\n";
-print $low_fh "Amplicon\tGene\tMedian\tLength\n";
+#my $header = "Amplicon\tGene\tForward\tReverse\tBAD\tMedian\tLength\n";
+my $header = "Amplicon\tGene\tForward\tReverse\tFoward Proportion\tReverse Proportion\tMedian\tLength\n";
+
+print $aa_fh $header;
+print $low_fh $header;
 
 my $low_total = 0;
-for my $amplicon( keys %median_coverage ) {
+for my $amplicon( keys %coverage_stats) {
     my ( $ampid, $gene, $length ) = split( /:/, $amplicon );
-    my $outstring = join( "\t", $ampid, $gene, $median_coverage{$amplicon}, $length );
+    my $outstring = join( "\t", $ampid, $gene, @{$coverage_stats{$amplicon}}, $length );
     print $aa_fh "$outstring\n";
 
-    if ( $median_coverage{$amplicon} < $threshold ) {
+    if ( $coverage_stats{$amplicon}[4] < $threshold ) {
         print $low_fh "$outstring\n";
         $low_total++;
     }
@@ -130,12 +173,11 @@ close $low_fh;
 
 # Get quartile coverage data and create output file
 my ( $quart1, $quart2, $quart3 ) = quartile_coverage( \@all_coverage );
-
-printf $summary_fh "Sample name: %s\n", $sample_name;
-printf $summary_fh "Total number of mapped reads: %d\n", $num_reads;
-printf $summary_fh "Total number of amplicons: %d\n", scalar( keys %median_coverage );
+printf $summary_fh "Sample name: %s\n", $sample_name if $sample_name;
+printf $summary_fh "Total number of mapped reads: %d\n", $num_reads if $num_reads;
+printf $summary_fh "Total number of amplicons: %d\n", scalar( keys %coverage_stats);
 printf $summary_fh "Number of amplicons below the threshold: %d\n", $low_total;
-printf $summary_fh "Percent of amplicons below the threshold: %.2f%%\n", ($low_total/scalar(keys %median_coverage)) * 100;
+printf $summary_fh "Percent of amplicons below the threshold: %.2f%%\n", ($low_total/scalar(keys %coverage_stats)) * 100;
 printf $summary_fh "25%% Quartile Coverage: %d\n", $quart1;
 printf $summary_fh "50%% Quartile Coverage: %d\n", $quart2;
 printf $summary_fh "75%% Quartile Coverage: %d\n", $quart3;
