@@ -142,18 +142,36 @@
   border:0;
 }
 
+/*.slick-header-columns {*/
+  /*background: white;*/
+  /*border-bottom: 1px solid silver;*/
+/*}*/
+
 .slick-header-columns {
   background: white;
   border-bottom: 1px solid silver;
+  white-space: pre !important;
+  height: 40px;
 }
 
 .slick-header-column {
   background: #E4E5E4 url('images/header-columns-bg.gif') 0 50% repeat-x !important;
   border-right: 1px solid silver !important;
+  font-weight: bold;
+  text-align: center;
+
 }
 
 .slick-header-column:hover, .slick-header-column-active {
   background: url('images/sky-fade-out.png') 0 80% repeat-x !important;
+}
+
+.slick-column-name {
+    white-space: normal;
+}
+
+.slick-header-column.ui-state-default {
+    height: 100%
 }
 
 .slick-headerrow {
@@ -185,6 +203,7 @@
 .slick-cell {
   padding-left: 4px;
   padding-right: 4px;
+  text-align:center;
 }
 
 .slick-cell.selected {
