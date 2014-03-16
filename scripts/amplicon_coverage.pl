@@ -13,7 +13,7 @@ use Data::Dump;
 use Cwd;
 
 ( my $scriptname = $0 ) =~ s/^(.*\/)+//;
-my $version = "v0.5.031414";
+my $version = "v1.0.031614";
 my $description = <<"EOT";
 From an Regions BED file, and a BED file generated from the sequence BAM file processed through bamToBed,
 generate strand coverage information for an amplicon panel.
@@ -110,9 +110,6 @@ while (<$rcov>) {
 }
 close $rcov;
 
-#dd \%coverage_data;
-#exit;
-
 my %coverage_stats;
 my @all_coverage;
 
@@ -146,13 +143,8 @@ for my $amplicon( sort keys %coverage_data ) {
     push( @{$coverage_stats{ join( ":", $amplicon, $length )}}, $forward_median, $reverse_median, $forward_prop, $reverse_prop, $median ); 
 }
 
-#dd \%coverage_stats;
-#exit;
-
 # Make tables of All Amplicon and Low Amplicon Coverage
-#my $header = "Amplicon\tGene\tForward\tReverse\tBAD\tMedian\tLength\n";
 my $header = "Amplicon\tGene\tForward\tReverse\tFoward Proportion\tReverse Proportion\tMedian\tLength\n";
-
 print $aa_fh $header;
 print $low_fh $header;
 
