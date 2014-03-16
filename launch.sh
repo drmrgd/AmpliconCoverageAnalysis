@@ -8,11 +8,11 @@
 #autorundisable
 ######################################################################################################################
 
-VERSION="0.3.0-031514"
+VERSION="0.5.031614"
 
 # Set up ENV vars to be used throughout
-export PLUGIN_DEV_FULL_LOG=1  # 0 => off; 1 => simple logging; 2 => xtrace logging 
-export PLUGIN_DEV_KEEP_INTERMEDIATE_FILES=1 # Get rid of extra dev files; 1 for on, 0 for off
+export PLUGIN_DEV_FULL_LOG=0  # 0 => off; 1 => simple logging; 2 => xtrace logging 
+export PLUGIN_DEV_KEEP_INTERMEDIATE_FILES=0 # Get rid of extra dev files; 1 for on, 0 for off
 
 export MINBAMSIZE="200000" 
 export SCRIPTSDIR="${DIRNAME}/scripts"
@@ -121,7 +121,7 @@ write_html_results ()
     run "ln -sf ${DIRNAME}/scripts/*.php3 \"${OUTDIR}/\"";
 
 	# Create the html report page
-    printf "Generating html report...\n" >&2
+    printf "\nGenerating html report...\n" >&2
     local HTMLOUT="${OUTDIR}/${HTML_RESULTS}";
 	write_page_header "$LIFEGRIDDIR/ACP.head.html" "$HTMLOUT"; # function in  /html/common.sh
     cat "${OUTDIR}/$PLUGIN_OUT_COVERAGE_HTML" >> "$HTMLOUT"
