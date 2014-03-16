@@ -24,4 +24,10 @@ fi
 if [ -f "${OUTDIR}/$PLUGIN_SCATTER_PLOT_PDF" ]; then
 	echo -e "Download scatter plot of all amplicons median coverage vs length of amplicon as a pdf file.\t$PLUGIN_SCATTER_PLOT_PDF" >> "$OUTFILE"
 fi
+if [ -f "${OUTDIR}/$STRAND_COVERAGE_PLOT" ]; then
+	echo -e "Download bar plot image file of read strand information for all amplicons.\t$STRAND_COVERAGE_PLOT" >> "$OUTFILE"
+fi
+if [ -f "${OUTDIR}/$HIGH_BIAS_PLOT" ]; then
+	echo -e "Download bar plot image file of read strand information for amplicons showing strand bias.\t$HIGH_BIAS_PLOT" >> "$OUTFILE"
+fi
 }
