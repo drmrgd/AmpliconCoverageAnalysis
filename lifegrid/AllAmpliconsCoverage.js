@@ -208,7 +208,8 @@ var options = {
   editable: true,
   autoEdit: false,
   enableCellNavigation: true,
-  multiColumnSort: true
+  multiColumnSort: true,
+  enableTextSelectionOnCells: true,
 };
 var dataView = new Slick.Data.DataView({inlineFilters: true});
 var grid = new Slick.Grid("#AA-grid", dataView, columns, options);
