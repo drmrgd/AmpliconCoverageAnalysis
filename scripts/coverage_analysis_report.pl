@@ -168,6 +168,7 @@ print OUTFILE "</tr>\n";
 
 my $txt = readTextAsTableFormat("$statsfile1");
 print OUTFILE "<tr><td><div class=\"statsdata\" style=\"width:500px\">$txt</div></td>";
+
 if( $have2stats )
 {
     $txt = readTextAsTableFormat("$statsfile2");
@@ -205,19 +206,24 @@ sub readTextAsTableFormat {
     my $stats_file = shift;
     unless( open( TEXTFILE, $stats_file ) )
     {
-	print STDERR "Could not locate text file $stats_file\n";
-	return "Data unavailable";
+        print STDERR "Could not locate text file $stats_file\n";
+        return "Data unavailable";
     }
     my $htmlText = "<table>\n";
     while( <TEXTFILE> )
     {
-	my ($n,$v) = split(/:/);
-	$v =~ s/^\s*//;
-	# format leading numeric string using commas
-	my $nf = ($v =~ /^(\d*)(\.?.*)/) ? commify($1).$2 : $v;
-	$n = getHelp($n,1);
-	$htmlText .= "<tr><td class=\"inleft\">$n</td>";
-	$htmlText .= ($v ne "") ? " <td class=\"inright\">$nf</td></tr>\n" : "</td>\n";
+        my ($n,$v) = split(/:/);
+        $v =~ s/^\s*//;
+        # format leading numeric string using commas unless it's a sample name
+        my $nf;
+        if ( $n ne 'Sample name' ) {
+            $nf = ($v =~ /^(\d*)(\.?.*)/) ? commify($1).$2 : $v;
+        } else {
+            $nf = $v;
+        }
+        $n = getHelp($n,1);
+        $htmlText .= "<tr><td class=\"inleft\">$n</td>";
+        $htmlText .= ($v ne "") ? " <td class=\"inright\">$nf</td></tr>\n" : "</td>\n";
     }
     close( TEXTFILE );
     return $htmlText."</table>";
