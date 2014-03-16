@@ -19,8 +19,6 @@ barcode_load_list ()
 	for barcodeName in $(cat ${TSP_FILEPATH_BARCODE_TXT} | grep "^barcode" | cut -d, -f2)
     do
         BARCODES[$BCN]=${barcodeName} 
-        # TODO: uncomment
-        #BARCODE_ROWSUM[$BCN]="<td style=\"text-align:center\">N/A</td> $ROWSUM_NODATA"
         barcodeBAM="${ANALYSIS_DIR}/${barcodeName}_${PLUGIN_BAM_NAME}"
         if [ -f "$barcodeBAM" ]; then
             # test file size
@@ -32,8 +30,6 @@ barcode_load_list ()
                 BAMSIZE[$barcodeName]=$BFSIZE
             else
                 printf "%s does not have enough reads to be processed.  Skipping...\n\n" $barcodeBAM
-                # TODO: uncomment
-                #BARCODE_ROWSUM[$BCN]="<td style=\"text-align:center\">${BFSIZE}</td> $ROWSUM_NODATA"
                 BARCODES_OK[${BCN}]=3
             fi
         else
@@ -65,10 +61,9 @@ barcode_partial_table ()
 	    REFRESHRATE=0
     fi
 
-    # TODO: intermediate report page breaks on refresh after all samples done processing
+    # XXX: intermediate report page sometimes breaks on refresh after all samples done processing. May want to have a look
     write_html_header "$HTML" $REFRESHRATE
     barcode_links "$HTML" $NLINES 0
-    #barcode_links "$HTML" $NLINES 1
     write_html_footer "$HTML"
 
     # Write table to block output.
@@ -156,7 +151,6 @@ barcode_links ()
         BARCODE=${BARCODES[$BCN]}
         echo "      <tr>" >> "$HTML"
         if [ ${BARCODES_OK[$BCN]} -eq 1 ]; then
-            # TODO: continue to work on this section for formatting.  Looking good so far!
             if [ $IS_BLOCK -eq 1 ]; then
 				echo "       <td style=\"text-align:center\">" >> $HTML
                 echo "          <a href=\"${BARCODE}/${HTML_RESULTS}\" style=\"cursor:help\">" >> $HTML
@@ -262,9 +256,9 @@ barcode ()
 			printf "Using Regions BED file: \t\t%s\n\n" $REGIONS_BED
 			printf "Running coverage analysis on BAM file...\n"
             
-            # TODO: add new scripts here.
-            #       Should i run coverageBed separately and parse it out instead of wrapping it in a perl script?
             bambed="${BARCODE_DIR}/bam_reads.bed"
+            
+            # Run analysis scripts on the BAM file
             run "bamToBed -i $BARCODE_BAM > $bambed" || RT = 0
             run "eval \"$SCRIPTSDIR/amplicon_coverage.pl -i -s ${SAMPLEKEY[$BARCODE]} -t $MINCOVERAGE -r ${BAMSIZE[$BARCODE]} -o $BARCODE_DIR $REGIONS_BED $bambed\"" || RT=0
             run "eval \"Rscript $SCRIPTSDIR/coverage_scatter.R ${SAMPLEKEY[$BARCODE]} $MINCOVERAGE $BARCODE_DIR\"" || RT=0
@@ -322,6 +316,7 @@ barcode ()
         printf "\nFinalizing and cleaning up intermediate files...\n"
         run "rm \"${RESULTS_DIR}/Rplots.pdf\""
         run "rm \"${RESULTS_DIR}/barcodeList.txt\""
+        run "rm \"${RESULTS_DIR}/*bed\""
         printf "...done!\n"
     fi
 }
