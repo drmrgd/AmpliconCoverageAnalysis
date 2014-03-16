@@ -300,7 +300,6 @@ barcode ()
 				if [[ -d "$BARCODE_DIR" ]]; then	
                     run "rm \"$barcode_rowsumfile\""
                     run "rm \"${BARCODE_DIR}/bam_reads.bed\""
-                    run "rm \"${BARCODE_DIR}/filelinks.xls\""
                     run "rm \"${BARCODE_DIR}/$PLUGIN_OUT_COVERAGE_HTML\""
 				fi
 			fi
