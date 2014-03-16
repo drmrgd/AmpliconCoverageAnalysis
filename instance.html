@@ -46,10 +46,8 @@
       $.each( data.objects, function(intIndex,result)
       {
        var targfile = result.file;
-       //var i = targfile.lastIndexOf('/unmerged/detail/');
 	   var i = targfile.lastIndexOf('/');
 	   if( i < 0 ) return true;
-       //var selName = targfile.substr(i+17)
        var selName = targfile.substr(i+1)
 	   if( selName.substr(0,7) == 'example' ) return true;
        var j = selName.lastIndexOf('.bed');
@@ -104,7 +102,7 @@
        success: function(data)
        {
         $("#json_result").html(
-         '<div style="text-align: center;"><img src="/site_media/jquery/colorbox/images/loading.gif" alt="Running Plugin" style="float:center"></img><p>Running the Plugin... Check AmpCovPlots.html in the Plugin Summary</p></div>');
+         '<div style="text-align: center;"><img src="/site_media/jquery/colorbox/images/loading.gif" alt="Running Plugin" style="float:center"></img><p>Running the Plugin... Check AmpliconCoverageAnalysis.html in the Plugin Summary</p></div>');
         setTimeout("parent.$.fn.colorbox.close()",2000);
        }
       });
@@ -114,7 +112,6 @@
   });
  </script>
 </head>
-
 <body>
  <div align="center">
   <form id="ampcovplots" name="ampcovplots" style="margin-left:auto;margin-right:auto">
@@ -126,9 +123,9 @@
     </tr>
     <tr>
     <td><span class="help"
-       title="Select the target regions bed file matching your amplicon panel. See Description and Notes below.">
+       title="Select the regions bed file matching your amplicon panel. See Description and Notes below.">
        Targeted Regions:</span></td>
-     <td><select id="targetregions" name="targetregions" style="width:300px"><option value="">None</option></select></td>
+     <td><select id="targetregions" name="targetregions" style="width:200px"><option value="">None</option></select></td>
 	<tr>
 		<td><span class="help"
 				title="The minimum number of reads (coverage) to set as the threshold.  Amplicons below this will populate the LowCoverageAmplicons Table. The default is 450 reads">
@@ -147,12 +144,12 @@
    <div align="left">
     <h3>Description and Usage Notes</h3>
     <p>
-	This plugin will determine the coverage for each base of every amplicon in a targetted resequencing experiment.
+	This plugin will determine the coverage for each base of each amplicon in an AmpliSeq sequencing experiment.
 	Based on those data, the median coverage for each amplicon will be determined, and the results will be plotted
-	in one scatter plot representing amplicon length vs median coverage, as well as in individual amplicon plots.
-	The plugin will also show the location of hotspots and will plot out homopolymer regions and the ref genes 
-	coding regions as they relate to each amplicon. <b> Note: This plugin is designed to work with Human Reference
-	hg19 only! </b></p>
+    in a scatter plot indicating amplicon length vs median coverage. The plugin will also compute the number of
+    forward and reverse reads for each amplicon and plot a bar chart of the results, in addition to a bar chart
+    of those amplicons showing a high variance of strand bias.
+	</p>
 	<p>
 	To use this plugin, please select the regions bed file that describes your amplicon panel (the same bed file
 	used in the Torrent Variant Caller) and the minimum coverage threshold (default 450).  This threshold will appear
@@ -161,10 +158,8 @@
 	<p>
 	For more details on how to use this plugin and the required additional packages that need to be installed,
 	please see the User Documentation.</p>
-
    </div>
   </form>
   </div>
 </body>
 </html>
-
