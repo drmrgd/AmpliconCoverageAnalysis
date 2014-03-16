@@ -297,8 +297,11 @@ barcode ()
 	    	    barcode_append_to_json_results $BARCODE $NJSON;
         	fi
 			if [[ "$PLUGIN_DEV_KEEP_INTERMEDIATE_FILES" -eq 0 ]]; then
-				if [ -e "$barcode_rowsumfile" ]; then	
+				if [[ -d "$BARCODE_DIR" ]]; then	
                     run "rm \"$barcode_rowsumfile\""
+                    run "rm \"${BARCODE_DIR}/bam_reads.bed\""
+                    run "rm \"${BARCODE_DIR}/filelinks.xls\""
+                    run "rm \"${BARCODE_DIR}/$PLUGIN_OUT_COVERAGE_HTML\""
 				fi
 			fi
 		fi
@@ -316,7 +319,7 @@ barcode ()
         printf "\nFinalizing and cleaning up intermediate files...\n"
         run "rm \"${RESULTS_DIR}/Rplots.pdf\""
         run "rm \"${RESULTS_DIR}/barcodeList.txt\""
-        run "rm \"${RESULTS_DIR}/*bed\""
+
         printf "...done!\n"
     fi
 }
