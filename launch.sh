@@ -8,7 +8,7 @@
 #autorundisable
 ######################################################################################################################
 
-VERSION="0.5.031614"
+VERSION="0.6.031814"
 
 # Set up ENV vars to be used throughout
 export PLUGIN_DEV_FULL_LOG=0  # 0 => off; 1 => simple logging; 2 => xtrace logging 
