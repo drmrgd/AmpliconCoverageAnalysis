@@ -33,7 +33,7 @@ scatter <- ggplot( coverage_data, aes( x = Length, y = Median ) ) +
            xlab( "Length of Amplicon" ) +
            ylab( "Median Coverage for Amplicon" ) +
            theme(plot.title = element_text( size=16, face="bold")) +
-           ggtitle( paste0( "Coverage Versus Amplicon Length Plot for ", sample ) )
+           ggtitle( paste0( "Coverage Versus Amplicon Length Plot for\n", sample ) )
 
 ggsave( filename = paste0( outdir, "/Amp_Coverage_vs_Length_Plot.png" ), plot = scatter )
 ggsave( filename = paste0( outdir, "/Amp_Coverage_vs_Length_Plot.pdf" ), plot = scatter )
