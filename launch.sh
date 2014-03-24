@@ -5,10 +5,9 @@
 #
 # 3/3/2014 - D Sims
 #
-#autorundisable
 ######################################################################################################################
 
-VERSION="0.6.031814"
+VERSION="1.0.032414"
 
 # Set up ENV vars to be used throughout
 export PLUGIN_DEV_FULL_LOG=0  # 0 => off; 1 => simple logging; 2 => xtrace logging 
