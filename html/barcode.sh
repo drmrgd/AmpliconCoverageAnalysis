@@ -61,7 +61,6 @@ barcode_partial_table ()
 	    REFRESHRATE=0
     fi
 
-    # XXX: intermediate report page sometimes breaks on refresh after all samples done processing. May want to have a look
     write_html_header "$HTML" $REFRESHRATE
     barcode_links "$HTML" $NLINES 0
     write_html_footer "$HTML"
