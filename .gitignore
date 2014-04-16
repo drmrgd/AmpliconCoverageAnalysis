@@ -1,3 +1,4 @@
 # Files to keep local and not upload to repo
 TODO
 *.swp
+.gitignore
