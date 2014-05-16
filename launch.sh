@@ -7,7 +7,7 @@
 #
 ######################################################################################################################
 
-VERSION="1.0.032414"
+VERSION="1.1.051614"
 
 # Set up ENV vars to be used throughout
 export PLUGIN_DEV_FULL_LOG=0  # 0 => off; 1 => simple logging; 2 => xtrace logging 
