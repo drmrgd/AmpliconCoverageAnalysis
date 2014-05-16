@@ -218,7 +218,9 @@ sub proc_bed {
         }
 
         my @fields = split;
-        my ($gene, $pool) = $fields[7] =~ /GENE_ID=(.*);SUBMITTED_REGION=(.*)$/;
+        #my ($gene, $pool) = $fields[7] =~ /GENE_ID=(.*);SUBMITTED_REGION=(.*)$/;
+        my ($gene, $pool) = $fields[7] =~ /GENE_ID=(.*?);.*(Pool.?\d+)/;
+        $pool =~ s/=//;
 
         print $out_fh join( "\t", @fields[0..3], $pool, $gene ), "\n";
     }
