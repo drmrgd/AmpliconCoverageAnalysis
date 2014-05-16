@@ -1,4 +1,4 @@
-AmpliconCoverageAnalysis Plugin - v1.0.032414
+AmpliconCoverageAnalysis Plugin - v1.1.051614
 --
 Plugin for the Ion Torrent analysis pipeline to get amplicon coverage metrics for an AmpliSeq
 run.  This plugin replaces AmpliconCoveragePlots for TSv4+ instances. Currently this is only 
