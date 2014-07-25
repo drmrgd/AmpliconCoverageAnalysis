@@ -22,7 +22,8 @@ barcode_load_list ()
         barcodeBAM="${ANALYSIS_DIR}/${barcodeName}_${PLUGIN_BAM_NAME}"
         if [ -f "$barcodeBAM" ]; then
             # test file size
-			BFSIZE=$(samtools view -c -F 4 $barcodeBAM)
+			#BFSIZE=$(samtools view -c -F 4 $barcodeBAM)
+			BFSIZE=$(samtools idxstats $barcodeBAM | awk '{reads+=$3} END {print reads}')
 			if [[ $BFSIZE -ge $MINBAMSIZE ]]; then
 				printf "%s is large enough to be processed.\n\n" $barcodeBAM
 				BARCODES_OK[${BCN}]=1
